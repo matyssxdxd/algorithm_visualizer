@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import VisualizeArray from "./components/VisualizeArray/VisualizeArray";
 
 function App() {
   const [size, setSize] = useState(50);
+  const [speed, setSpeed] = useState(5);
   const [arr, setArr] = useState([]);
   const [animations, setAnimations] = useState([]);
+  const [sorting, setSorting] = useState(false);
+  const [sorted, setSorted] = useState(false);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     setArr([]);
@@ -20,6 +24,8 @@ function App() {
     setArr(tempArray);
   }, [size]);
 
+  //
+
   function bubbleSort() {
     let i, j: number, temp;
     let swapped;
@@ -33,8 +39,9 @@ function App() {
           temp = array[j];
           array[j] = array[j + 1];
           array[j + 1] = temp;
+          console.log(`first: ${array[j]}  next: ${array[j + 1]}`);
           swapped = true;
-          newArray.push([...array]);
+          newArray.push({ animation: [...array], i: j, j: j + 1 });
         }
       }
       if (!swapped) break;
@@ -43,12 +50,33 @@ function App() {
     setAnimations(newArray);
   }
 
+  function animateBar(i, j) {
+    const arrayBars = containerRef.current.children;
+    setTimeout(() => {
+      arrayBars[i].style.backgroundColor = "green";
+      arrayBars[j].style.backgroundColor = "green";
+    }, speed);
+    setTimeout(() => {
+      arrayBars[i].style.backgroundColor = "";
+      arrayBars[j].style.backgroundColor = "";
+    }, speed * 2);
+  }
+
   function animateArray() {
-    animations.forEach((animation, i) => {
+    animations.forEach((element, i) => {
       setTimeout(() => {
-        setArr(animation);
-      }, i * 5);
+        animateBar(element.i, element.j);
+        setArr(element.animation);
+      }, i * speed);
     });
+    setTimeout(() => {
+      const arrayBars = containerRef.current.children;
+      for (let i = 0; i < arrayBars.length; i++) {
+        setTimeout(() => {
+          arrayBars[i].style.backgroundColor = "green";
+        }, i * speed);
+      }
+    }, animations.length * (speed + 0.1));
   }
 
   return (
@@ -64,7 +92,20 @@ function App() {
           value={size}
           onChange={(event) => setSize(event.target.value)}
         />
-        <div style={{ display: "flex", gap: "1px", alignItems: "baseline" }}>
+        <p>
+          Speed: <span>{speed}</span>
+        </p>
+        <input
+          min="5"
+          max="100"
+          type="range"
+          value={speed}
+          onChange={(event) => setSpeed(event.target.value)}
+        />
+        <div
+          style={{ display: "flex", gap: "1px", alignItems: "baseline" }}
+          ref={containerRef}
+        >
           {arr.map((element, index) => (
             <VisualizeArray key={index} height={element} />
           ))}
