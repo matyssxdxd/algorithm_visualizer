@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ArrayBar from "./ArrayBar/ArrayBar";
 import bubbleSort from "./algorithms/bubbleSort";
-import mergeSort from "./algorithms/mergeSort";
+import getMergeSort from "./algorithms/mergeSort";
 
 function SortingVisualizer() {
   const [size, setSize] = useState<number>(50);
@@ -27,14 +27,26 @@ function SortingVisualizer() {
   const animateMergeSort = () => {
     if (sorting) return;
     setSorting(true);
-    const animations = mergeSort(arr);
-    animations.forEach(({ first, second, swapped }, index) => {
+    const animations = getMergeSort(arr);
+    animations.forEach(([ comp, swapped ], index) => {
       setTimeout(() => {
-        setArr((prevArr) => {
-          const arrCopy = [...prevArr];
-          prevArr[first] = second;
-          return arrCopy;
-        });
+        if (!swapped) {
+          if (comp.length === 2) {
+            const [i, j] = comp;
+            animateBar(i);
+            animateBar(j);
+          } else {
+            const [i] = comp;
+            animateBar(i);
+          }
+        } else {
+          setArr((prevArr) => {
+            const [k, newValue] = comp;
+            const arrCopy = [...prevArr];
+            arrCopy[k] = newValue
+            return arrCopy;
+          });
+        }
       }, index * speed);
     });
     setTimeout(() => {
