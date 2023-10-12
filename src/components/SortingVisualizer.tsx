@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import ArrayBar from "./ArrayBar/ArrayBar";
-import bubbleSort from "./Algorithms/bubbleSort";
+import bubbleSort from "./algorithms/bubbleSort";
+import mergeSort from "./algorithms/mergeSort";
 
 function SortingVisualizer() {
   const [size, setSize] = useState<number>(50);
-  const [speed, setSpeed] = useState<number>(5);
+  const [speed, setSpeed] = useState<number>(10);
   const [arr, setArr] = useState<number[]>([]);
   const [sorting, setSorting] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    
     resetColors();
     setArr([]);
 
@@ -24,33 +24,63 @@ function SortingVisualizer() {
     setArr(tempArray);
   }, [size]);
 
-  const animateBubbleSort = () => {
+  const animateMergeSort = () => {
     if (sorting) return;
     setSorting(true);
-    let animations = bubbleSort(arr);
-    animations.forEach((element, index) => {
+    const animations = mergeSort(arr);
+    animations.forEach(({ first, second, swapped }, index) => {
       setTimeout(() => {
-        animateBar(element.i, element.j)
-        setArr(element.animation)
-      }, speed * index);
-    })
+        setArr((prevArr) => {
+          const arrCopy = [...prevArr];
+          prevArr[first] = second;
+          return arrCopy;
+        });
+      }, index * speed);
+    });
     setTimeout(() => {
       animateSortedArray();
     }, animations.length * speed);
-  }
+  };
+
+  const animateBubbleSort = () => {
+    if (sorting) return;
+    setSorting(true);
+    const animations = bubbleSort(arr);
+    animations.forEach(({ first, second, swapped }, index) => {
+      setTimeout(() => {
+        if (!swapped) {
+          animateBar(first);
+          animateBar(second);
+        } else {
+          setArr((prevArr) => {
+            animateBar(first);
+            animateBar(second);
+            const arrCopy = [...prevArr];
+            const temp = arrCopy[first];
+            arrCopy[first] = arrCopy[second];
+            arrCopy[second] = temp;
+            return arrCopy;
+          });
+        }
+      }, index * speed);
+    });
+    setTimeout(() => {
+      animateSortedArray();
+    }, animations.length * speed);
+  };
 
   const resetColors = () => {
     const arrayBars = containerRef.current?.children as HTMLCollection;
     for (let i = 0; i < arrayBars.length; i++) {
-       (arrayBars[i] as HTMLElement).style.backgroundColor = "black"
+      (arrayBars[i] as HTMLElement).style.backgroundColor = "black";
     }
-  }
+  };
 
   function animateSortedArray() {
     const arrayBars = containerRef.current?.children as HTMLCollection;
     for (let i = 0; i < arrayBars.length; i++) {
       setTimeout(() => {
-        (arrayBars[i] as HTMLElement).style.backgroundColor = "green"
+        (arrayBars[i] as HTMLElement).style.backgroundColor = "green";
       }, i * speed);
     }
     setTimeout(() => {
@@ -58,15 +88,13 @@ function SortingVisualizer() {
     }, arrayBars.length * speed);
   }
 
-  function animateBar(i: number, j: number) {
+  function animateBar(index: number) {
     const arrayBars = containerRef.current?.children as HTMLCollection;
     setTimeout(() => {
-        (arrayBars[i] as HTMLElement).style.backgroundColor = "green";
-        (arrayBars[j] as HTMLElement).style.backgroundColor = "green";
+      (arrayBars[index] as HTMLElement).style.backgroundColor = "green";
     }, speed);
     setTimeout(() => {
-        (arrayBars[i] as HTMLElement).style.backgroundColor = "";
-        (arrayBars[j] as HTMLElement).style.backgroundColor = "";
+      (arrayBars[index] as HTMLElement).style.backgroundColor = "";
     }, speed * 2);
   }
 
@@ -77,7 +105,7 @@ function SortingVisualizer() {
           Size: <span>{size}</span>
         </p>
         <input
-          min="5"
+          min="10"
           max="100"
           type="range"
           value={size}
@@ -87,7 +115,7 @@ function SortingVisualizer() {
           Speed: <span>{speed}</span>
         </p>
         <input
-          min="5"
+          min="10"
           max="100"
           type="range"
           value={speed}
@@ -102,6 +130,7 @@ function SortingVisualizer() {
           ))}
         </div>
         <button onClick={animateBubbleSort}>click</button>
+        <button onClick={animateMergeSort}>click</button>
       </div>
     </>
   );
